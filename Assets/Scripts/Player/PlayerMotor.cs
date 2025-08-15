@@ -19,7 +19,9 @@ public class PlayerMotor : MonoBehaviour
             {
                 state.LocalInput();
                 state.ExecuteState();
+                state.SetAnimation();
             }
         }
     }
 }
+

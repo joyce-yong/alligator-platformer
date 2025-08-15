@@ -13,6 +13,8 @@ public class PlayerJetpack : PlayerStates
     private float _fuelDurectionLeft;
     private bool _stillHaveFuel = true;
 
+    private int _jetpackParameter = Animator.StringToHash("Jetpack");
+
     protected override void InitState()
     {
         base.InitState();
@@ -88,5 +90,10 @@ public class PlayerJetpack : PlayerStates
 
             yield return null;
         }
+    }
+
+    public override void SetAnimation()
+    {
+        _animator.SetBool(_jetpackParameter, _playerController.Conditions.IsJetpacking);
     }
 }

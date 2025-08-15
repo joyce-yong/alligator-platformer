@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerStates : MonoBehaviour
 {
     protected PlayerController _playerController;
+    protected Animator _animator;
     protected float _horizontalInput;
     protected float _verticalInput;
 
@@ -17,6 +18,7 @@ public class PlayerStates : MonoBehaviour
     protected virtual void InitState()
     {
         _playerController = GetComponent<PlayerController>();
+        _animator = GetComponent<Animator>();
     }
 
     // Override in order to create the state logic
@@ -28,6 +30,7 @@ public class PlayerStates : MonoBehaviour
     // Gets the normal Input   
     public virtual void LocalInput()
     {
+
         _horizontalInput = Input.GetAxisRaw("Horizontal");
         _verticalInput = Input.GetAxisRaw("Vertical");
 
@@ -39,4 +42,10 @@ public class PlayerStates : MonoBehaviour
     {
 
     }
+
+    public virtual void SetAnimation()
+    {
+
+    }
 }
+

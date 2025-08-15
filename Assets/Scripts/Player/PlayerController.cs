@@ -69,6 +69,7 @@ public class PlayerController : MonoBehaviour
 
         SetRayOrigins();
         GetFaceDirection();
+        RotateModel();
 
         if (FacingRight)
         {
@@ -305,6 +306,19 @@ public class PlayerController : MonoBehaviour
 
         _internalFaceDirection = _faceDirection;
     }
+
+    private void RotateModel()
+    {
+        if (FacingRight)
+        {
+            transform.localScale = new Vector3(1, 1, 1);
+        }
+        else
+        {
+            transform.localScale = new Vector3(-1, 1, 1);
+        }
+    }
+
 
     #endregion
 
