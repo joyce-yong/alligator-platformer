@@ -10,6 +10,14 @@ public class PlayerController : MonoBehaviour
     [Header("Collisions")]
     [SerializeField] private LayerMask collideWith;
     [SerializeField] private int verticalRayAmount = 4;
+    [SerializeField] private int horizontalRayAmount = 4;
+
+    #region Properties
+
+    // Return if the Player is facing Right
+    public bool FacingRight { get; set; }
+
+    #endregion
 
     #region Internal
 
@@ -29,6 +37,9 @@ public class PlayerController : MonoBehaviour
     private Vector2 _movePosition;
     private float _skin = 0.05f;
 
+    private float _internalFaceDirection = 1f;
+    private float _faceDirection;
+
     #endregion
 
     private void Start()
@@ -45,6 +56,17 @@ public class PlayerController : MonoBehaviour
         StartMovement();
 
         SetRayOrigins();
+        GetFaceDirection();
+
+        if (FacingRight)
+        {
+            HorizontalCollision(1);
+        }
+        else
+        {
+            HorizontalCollision(-1);
+        }
+
         CollisionBelow();
 
         transform.Translate(_movePosition, Space.Self);
@@ -115,6 +137,43 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
+    #region Collision Horizontal
+
+    private void HorizontalCollision(int direction)
+    {
+        Vector2 rayHorizontalBottom = (_boundsBottomLeft + _boundsBottomRight) / 2f;
+        Vector2 rayHorizontalTop = (_boundsTopLeft + _boundsTopRight) / 2f;
+        rayHorizontalBottom += (Vector2)transform.up * _skin;
+        rayHorizontalTop -= (Vector2)transform.up * _skin;
+
+        float rayLenght = Mathf.Abs(_force.x * Time.deltaTime) + _boundsWidth / 2f + _skin * 2f;
+
+        for (int i = 0; i < horizontalRayAmount; i++)
+        {
+            Vector2 rayOrigin = Vector2.Lerp(rayHorizontalBottom, rayHorizontalTop, (float)i / (horizontalRayAmount - 1));
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, direction * transform.right, rayLenght, collideWith);
+            Debug.DrawRay(rayOrigin, transform.right * rayLenght * direction, Color.cyan);
+
+            if (hit)
+            {
+                if (direction >= 0)
+                {
+                    _movePosition.x = hit.distance - _boundsWidth / 2f - _skin * 2f;
+                    _conditions.IsCollidingRight = true;
+                }
+                else
+                {
+                    _movePosition.x = -hit.distance + _boundsWidth / 2f + _skin * 2f;
+                    _conditions.IsCollidingLeft = true;
+                }
+
+                _force.x = 0f;
+            }
+        }
+    }
+
+    #endregion
+
     #endregion
 
     #region Movement
@@ -147,6 +206,29 @@ public class PlayerController : MonoBehaviour
         _currentGravity = gravity;
 
         _force.y += _currentGravity * Time.deltaTime;
+    }
+
+    #endregion
+
+    #region Direction
+    // Manage the direction we are facing
+    private void GetFaceDirection()
+    {
+        _faceDirection = _internalFaceDirection;
+        FacingRight = _faceDirection == 1;  // if FacingRight is TRUE
+
+        if (_force.x > 0.0001f)
+        {
+            _faceDirection = 1f;
+            FacingRight = true;
+        }
+        else if (_force.x < -0.0001f)
+        {
+            _faceDirection = -1f;
+            FacingRight = false;
+        }
+
+        _internalFaceDirection = _faceDirection;
     }
 
     #endregion
