@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     #region Internal
 
     private BoxCollider2D _boxCollider2D;
+    private PlayerConditions _conditions;
 
     private Vector2 _boundsTopLeft;
     private Vector2 _boundsTopRight;
@@ -33,6 +34,9 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
         _boxCollider2D = GetComponent<BoxCollider2D>();
+
+        _conditions = new PlayerConditions();
+        _conditions.Reset();
     }
 
     private void Update()
@@ -55,6 +59,21 @@ public class PlayerController : MonoBehaviour
 
     private void CollisionBelow()
     {
+        if (_movePosition.y < -0.0001f)
+        {
+            _conditions.IsFalling = true;
+        }
+        else
+        {
+            _conditions.IsFalling = false;
+        }
+
+        if (!_conditions.IsFalling)
+        {
+            _conditions.IsCollidingBelow = false;
+            return;  // if the Player going UP, then return because no point to calculate other colliding below.
+        }
+
         // Calculate ray lenght
         float rayLenght = _boundsHeight / 2f + _skin;
         if (_movePosition.y < 0)
@@ -79,10 +98,17 @@ public class PlayerController : MonoBehaviour
             {
                 _movePosition.y = -hit.distance + _boundsHeight / 2f + _skin;
 
+                _conditions.IsCollidingBelow = true;
+                _conditions.IsFalling = false;
+
                 if (Mathf.Abs(_movePosition.y) < 0.0001f)
                 {
                     _movePosition.y = 0f;
                 }
+            }
+            else
+            {
+                _conditions.IsCollidingBelow = false;
             }
         }
     }
@@ -106,6 +132,13 @@ public class PlayerController : MonoBehaviour
     private void StartMovement()
     {
         _movePosition = _force * Time.deltaTime;
+        _conditions.Reset();
+    }
+
+    // Sets our new x movement
+    public void SetHorizontalForce(float xForce)
+    {
+        _force.x = xForce;
     }
 
     // Calculate the gravity to apply
