@@ -6,6 +6,7 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private float gravity = -20f;
+    [SerializeField] private float fallMultiplier = 1.5f;
 
     [Header("Collisions")]
     [SerializeField] private LayerMask collideWith;
@@ -16,6 +17,15 @@ public class PlayerController : MonoBehaviour
 
     // Return if the Player is facing Right
     public bool FacingRight { get; set; }
+
+    // Return the Gravity value
+    public float Gravity => gravity;
+
+    // Return the Force applied 
+    public Vector2 Force => _force;
+
+    // Return the conditions
+    public PlayerConditions Conditions => _conditions;
 
     #endregion
 
@@ -39,6 +49,8 @@ public class PlayerController : MonoBehaviour
 
     private float _internalFaceDirection = 1f;
     private float _faceDirection;
+
+    private float _wallFallMultiplier;
 
     #endregion
 
@@ -68,6 +80,7 @@ public class PlayerController : MonoBehaviour
         }
 
         CollisionBelow();
+        CollisionAbove();
 
         transform.Translate(_movePosition, Space.Self);
 
@@ -118,7 +131,15 @@ public class PlayerController : MonoBehaviour
 
             if (hit)
             {
-                _movePosition.y = -hit.distance + _boundsHeight / 2f + _skin;
+                if (_force.y > 0)
+                {
+                    _movePosition.y = _force.y * Time.deltaTime;
+                    _conditions.IsCollidingBelow = false;
+                }
+                else
+                {
+                    _movePosition.y = -hit.distance + _boundsHeight / 2f + _skin;
+                }
 
                 _conditions.IsCollidingBelow = true;
                 _conditions.IsFalling = false;
@@ -127,10 +148,6 @@ public class PlayerController : MonoBehaviour
                 {
                     _movePosition.y = 0f;
                 }
-            }
-            else
-            {
-                _conditions.IsCollidingBelow = false;
             }
         }
     }
@@ -174,11 +191,49 @@ public class PlayerController : MonoBehaviour
 
     #endregion
 
+    #region Collision Above
+
+    private void CollisionAbove()
+    {
+        if (_movePosition.y < 0)
+        {
+            return;
+        }
+
+        // Set rayLenght
+        float rayLenght = _movePosition.y + _boundsHeight / 2f;
+
+        // Origin Points
+        Vector2 rayTopLeft = (_boundsBottomLeft + _boundsTopLeft) / 2f;
+        Vector2 rayTopRight = (_boundsBottomRight + _boundsTopRight) / 2f;
+        rayTopLeft += (Vector2)transform.right * _movePosition.x;
+        rayTopRight += (Vector2)transform.right * _movePosition.x;
+
+        for (int i = 0; i < verticalRayAmount; i++)
+        {
+            Vector2 rayOrigin = Vector2.Lerp(rayTopLeft, rayTopRight, (float)i / (float)(verticalRayAmount - 1));
+            RaycastHit2D hit = Physics2D.Raycast(rayOrigin, transform.up, rayLenght, collideWith);
+            Debug.DrawRay(rayOrigin, transform.up * rayLenght, Color.red);
+
+            if (hit)
+            {
+                _movePosition.y = hit.distance - _boundsHeight / 2f;
+                _conditions.IsCollidingAbove = true;
+            }
+            else
+            {
+                _conditions.IsCollidingAbove = false;
+            }
+        }
+    }
+
+    #endregion
+
     #endregion
 
     #region Movement
 
-    // Clamp our force applied
+    // Clamp our force applied 
     private void CalculateMovement()
     {
         if (Time.deltaTime > 0)
@@ -200,12 +255,32 @@ public class PlayerController : MonoBehaviour
         _force.x = xForce;
     }
 
+    public void SetVerticalForce(float yForce)
+    {
+        _force.y = yForce;
+    }
+
     // Calculate the gravity to apply
     private void ApplyGravity()
     {
         _currentGravity = gravity;
 
+        if (_force.y < 0)
+        {
+            _currentGravity *= fallMultiplier;
+        }
+
         _force.y += _currentGravity * Time.deltaTime;
+
+        if (_wallFallMultiplier != 0)
+        {
+            _force.y *= _wallFallMultiplier;
+        }
+    }
+
+    public void SetWallClingMultiplier(float fallM)
+    {
+        _wallFallMultiplier = fallM;
     }
 
     #endregion
