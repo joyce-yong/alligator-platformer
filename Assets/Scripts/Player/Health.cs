@@ -6,6 +6,7 @@ using UnityEngine;
 public class Health : MonoBehaviour
 {
     public static Action<int> OnLifesChanged;
+    public static Action<PlayerMotor> OnDeath;
 
     [Header("Settings")]
     [SerializeField] private int lifes = 3;
@@ -48,6 +49,7 @@ public class Health : MonoBehaviour
         if (_currentLifes <= 0)
         {
             _currentLifes = 0;
+            OnDeath?.Invoke(gameObject.GetComponent<PlayerMotor>());
         }
 
         UpdateLifesUI();
@@ -64,3 +66,4 @@ public class Health : MonoBehaviour
         OnLifesChanged?.Invoke(_currentLifes);
     }
 }
+
