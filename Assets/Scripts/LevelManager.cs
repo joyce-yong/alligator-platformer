@@ -7,14 +7,30 @@ public class LevelManager : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private Transform levelStartPoint;
+    [SerializeField] private GameObject playerPrefab;
 
     private PlayerMotor _currentPlayer;
+
+    private void Awake()
+    {
+        SpawnPlayer(playerPrefab);
+    }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.R))
         {
             RevivePlayer();
+        }
+    }
+
+    // Spawns our player in the spawnPoint   
+    private void SpawnPlayer(GameObject player)
+    {
+        if (player != null)
+        {
+            _currentPlayer = Instantiate(player, levelStartPoint.position, Quaternion.identity).GetComponent<PlayerMotor>();
+            _currentPlayer.GetComponent<Health>().ResetLife();
         }
     }
 
@@ -31,7 +47,7 @@ public class LevelManager : MonoBehaviour
 
     private void PlayerDeath(PlayerMotor player)
     {
-        _currentPlayer = player;
+        //_currentPlayer = player;
         _currentPlayer.gameObject.SetActive(false);
     }
 
